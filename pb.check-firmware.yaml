@@ -1,0 +1,42 @@
+---
+- hosts: all
+  gather_facts: no
+  connection: local
+  tasks:
+    - name: show version
+      junipernetworks.junos.junos_command:
+        commands:
+        - show chassis firmware
+        - show system license
+        display: json
+      register: firmware
+
+    - name: firmware
+      debug: var=firmware.stdout.0
+      when: false
+
+    - name: cut noise from the firmware data
+      ansible.builtin.set_fact:
+        firmware_data: "{{ firmware.stdout.0 | split('\n\n') | first }}"
+        license_data: "{{ firmware.stdout.1 | split('\n\n') | first }}"
+
+    - name: bios version
+      debug:
+        msg: "{{inventory_hostname}} | {{ansible_host}} | BIOS | {{ item['firmware-version'].0['data'] }}"
+      loop: "{{ firmware_data['firmware-information'].0['chassis'].0['chassis-module'].0['firmware'] }}"
+      loop_control:
+        label: item
+      when: item['type'].0['data'] == 'BIOS'
+
+    - name: license
+      debug: var=firmware.stdout.1
+      when: false
+
+    - name: debug license_data
+      debug:
+        msg: "{{inventory_hostname}} | {{ansible_host}} | license | {{ item['license'].0['name'].0['data'] | default('NONE') }}"
+      loop: "{{ license_data['license-summary-information'].0['license-information'] }}"
+      loop_control:
+        label: item
+
+
