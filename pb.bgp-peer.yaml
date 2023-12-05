@@ -1,0 +1,40 @@
+---
+- hosts: all
+  gather_facts: no
+  connection: local
+  tasks:
+    - name: show version
+      junipernetworks.junos.junos_command:
+        commands:
+        - show bgp summary
+        # - show evpn database state duplicate
+        display: json
+      register: bgp
+
+    # - name: firmware
+    #   debug: var=bgp.stdout.0
+
+    - name: cut noise from the firmware data
+      ansible.builtin.set_fact:
+        bgp_data: "{{ bgp.stdout.0 | split('\n\n') | first }}"
+        # evpn_dupe: "{{ bgp.stdout.1 | split('\n\n') | first }}"
+
+    - name: Bgp Peers
+      debug:
+        msg: "{{inventory_hostname}} {{ansible_host}} BGP Peer {{ item['peer-address'].0.data }} {{ item['peer-state'].0.data }}"
+      loop: "{{ bgp_data['bgp-information'].0['bgp-peer'] }}"
+      loop_control:
+        label: item
+      # when: item['peer-state'].0['data'] != 'Established'
+
+#     - name: Find Suppressed MACs
+#       debug:
+#         msg: "{{inventory_hostname}} | {{ansible_host}} | SUPPRESSED | MAC:{{ item['mac-address'][0].data }} | IP:{{ item['ip-address'][0].data }} | VNI:{{ item['vni-id'][0].data }} | SOURCE:{{ item['active-source'][0].data }} | {{ item['active-source-timestamp'][0].data }}"
+#       loop: "{{ evpn_suppression.parsed_output['evpn-database-information'][0]['evpn-database-instance'][0]['mac-entry'] }}"
+#       loop_control:
+#         label: item
+# #      failed_when: item["peer-state"][0].data != "Established"
+#       when: item["mac-address"][0].data is defined
+      
+
+

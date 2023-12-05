@@ -2,3 +2,6 @@ ansible
 six
 junos-eznc
 jxmlease
+python-dotenv
+urllib3
+requests
