@@ -11,14 +11,17 @@ ansible-galaxy collection install junipernetworks.junos
 
 ```
 
-## run
+## run with hosts file
 
 Edit hosts.ini
 
 ```
 ansible-playbook pb.check-firmware.yaml
+
+ansible-playbook pb.check-firmware.yaml
 ```
 
+## run with dynamic inventory
 For Apstra, edit .env
 ```
 apstra_server_host=192.168.210.15
@@ -32,4 +35,23 @@ ansible_ssh_pass=securepassword
 
 ```
 ansible-playbook  -i apstra_inventory.py pb.check-firmware.yaml
+
+ansible-playbook  -i apstra_inventory.py pb.check-firmware.yaml
+```
+
+
+## inventory operations
+```
+(venv) ckim@ckim-mbp:junos-ansible-misc % ansible-inventory --inventory apstra_inventory.py --host LEAF05-192.168.0.205
+[WARNING]: Invalid characters were found in group names but not replaced, use -vvvv to see details
+{
+    "ansible_connection": "network_cli",
+    "ansible_host": "192.168.0.205",
+    "ansible_network_os": "junipernetworks.junos.junos",
+    "ansible_ssh_pass": "XXXXXXX",
+    "ansible_user": "ckim",
+    "junso_hw_model": "QFX5220-128C",
+    "junso_hw_version": "REV 12",
+    "junso_os_version": "22.2R3-S2.5-EVO"
+}
 ```

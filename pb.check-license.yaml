@@ -1,0 +1,35 @@
+---
+- hosts: all
+  gather_facts: no
+  connection: local
+  tasks:
+    - name: show system license and chassis firmware
+      junipernetworks.junos.junos_command:
+        commands:
+        - show system license
+        display: json
+      register: license_result
+
+
+    - name: debug license_result
+      debug: var=license_result.stdout.0
+      when: false
+      # when: junso_hw_model != 'QFX5220-128C'
+
+    - name: cut noise from the license data
+      ansible.builtin.set_fact:
+        license_data: "{{ license_result.stdout.0 | split('\n\n') | first }}"
+
+    - name: show license_data
+      debug:
+        msg: "{{inventory_hostname}} | {{ansible_host}} | license | {{ item['license'].0['name'].0['data'] | default('NONE') }}"
+      loop: "{{ license_data['license-summary-information'].0['license-information'] }}"
+      loop_control:
+        label: item
+
+    - name: no-licenses-installed
+      debug:
+        msg: "{{inventory_hostname}} {{ansible_host}} no-licenses-installed"
+      ignore_errors: true
+      failed_when: '"no-licenses-installed" in license_data["license-summary-information"].0["license-information"].0 '
+
